@@ -3,7 +3,7 @@ Serial Port Relay Controller
 
 Description:
 
-This daemon was originally wriiten to serve a single purpose. You will have to modify the start() frunction to test against your own parameters and trigger the setDTR functionality.
+This daemon was originally wriiten to serve a single purpose. You will have to modify the start() function to test against your own parameters and trigger the setDTR functionality.
 # Installation
 
 1.) Get Dependencies
