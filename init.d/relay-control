@@ -1,0 +1,75 @@
+#! /bin/bash
+### BEGIN INIT INFO
+# Provides:          mylistener
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     S
+# Default-Stop:      0 6
+# Short-Description: This is the description.
+# Description:       This is the description.
+### END INIT INFO
+
+# Get function from functions library
+. /etc/init.d/functions
+DESC="Serial Port Relay Controller"
+DAEMON="/usr/bin/python /relay-control/relay-control.py"
+PIDFILE="/tmp/relay-control.pid"
+LOCKFILE="/var/lock/subsys/relay-control"
+
+is_running() {
+    if [ -f $PIDFILE ]; then
+        PID=`cat $PIDFILE`
+        if [ -n "$PID" ]; then
+            return 0
+        else
+            return 1
+        fi
+    else
+        return 1
+    fi
+}
+
+start_relay() {
+    if ! is_running; then
+    cd /relay-control/
+        echo "Starting $DESC"
+        nohup $DAEMON >> /var/log/messages 2>&1 &
+        RETVAL=$?
+        PID=$!
+        [ $RETVAL -eq 0 ] && touch $LOCKFILE && success || failure
+        echo $PID > $PIDFILE
+        echo ' '
+    else
+        echo "$DESC: already running (pid $PID)"
+    fi
+}
+
+stop_relay() {
+    if is_running; then
+        echo "Stopping $DESC"
+        if [ -f $PIDFILE ]; then
+            PID=`cat $PIDFILE`
+            kill $PID
+            rm -f $PIDFILE
+            rm -f $LOCKFILE
+        fi
+    else
+        echo "$DESC: not running"
+    fi
+    [ -f $PIDFILE ] && rm -f $PIDFILE
+}
+
+case "$1" in
+  start)
+    start_relay
+    ;;
+  stop)
+    stop_relay
+    ;;
+  *)
+    echo "Useage: /etc/init.d/relay-control {start|stop}"
+    exit 1
+    ;;
+esac
+
+exit 0
